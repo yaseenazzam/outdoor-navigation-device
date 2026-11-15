@@ -30,6 +30,8 @@ int main(void)
     /* Give the serial monitor time to connect after reset. */
     k_msleep(1000);
 
+    navigation_run_validation_tests();
+
     printk("\nNavigation heading tests\n");
 
     for (size_t i = 0; i < test_count; ++i) {
