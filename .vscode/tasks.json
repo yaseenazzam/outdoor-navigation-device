@@ -1,0 +1,48 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Navigation: Build",
+            "type": "process",
+            "command": "${workspaceFolder}/../eie_nrf52840/.venv/bin/python",
+            "args": [
+                "-m",
+                "west",
+                "build",
+                "-b",
+                "nrf52840dk/nrf52840",
+                ".",
+                "--",
+                "-DZEPHYR_MODULES=${workspaceFolder}/../modules/hal/cmsis_6;${workspaceFolder}/../modules/hal/nordic",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Navigation: Flash",
+            "type": "process",
+            "command": "${workspaceFolder}/../eie_nrf52840/.venv/bin/python",
+            "args": [
+                "-m",
+                "west",
+                "flash",
+                "--runner",
+                "jlink"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "Navigation: Build",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -1,3 +1,7 @@
 {
-    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json"
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "python.defaultInterpreterPath": "${workspaceFolder}/../eie_nrf52840/.venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python-envs.terminal.autoActivationType": "command",
+    "cmake.configureOnOpen": false
 }
