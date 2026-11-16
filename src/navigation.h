@@ -30,6 +30,10 @@ bool navigation_distance_m(struct nav_position current,
                            struct nav_position destination,
                            double *distance_m);
 
+bool navigation_initial_bearing_deg(struct nav_position current,
+                               struct nav_position destination,
+                               double *bearing_deg);
+
 /* Temporary test entry point. */
 void navigation_run_validation_tests(void);
 #endif

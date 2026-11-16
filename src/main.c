@@ -32,6 +32,59 @@ int main(void)
 
     navigation_run_validation_tests();
 
+    struct nav_position origin = {
+        .latitude_deg = 0.0,
+        .longitude_deg = 0.0
+    };
+    double metres = -1.0;
+
+    bool ok = navigation_distance_m(origin, origin, &metres);
+    printk("Same position: %s\n", (ok && metres == 0.0) ? "PASS" : "FAIL");
+
+    const struct nav_position east = {
+        .latitude_deg = 0.0,
+        .longitude_deg = 1.0
+    };
+    metres = -1.0;
+
+    ok = navigation_distance_m(origin, east, &metres);
+    printk("One degree east: %s\n",
+           (ok && metres >= 111194.0 && metres <= 111196.0)
+               ? "PASS" : "FAIL");
+
+    struct nav_position invalid_destination = {
+        .latitude_deg = 91.0,
+        .longitude_deg = 0.0
+    };
+    metres = -1.0;
+
+    ok = navigation_distance_m(origin, invalid_destination, &metres);
+    printk("Invalid destination latitude: %s\n",
+           (!ok && metres == -1.0) ? "PASS" : "FAIL");
+
+    double bearing_deg = -1.0;
+    bool bearing_ok = navigation_initial_bearing_deg(origin, east, &bearing_deg);
+
+    printk("Bearing east: %s\n",
+           (bearing_ok && bearing_deg >= 89.999 && bearing_deg <= 90.001)
+               ? "PASS" : "FAIL");
+
+    const struct nav_position west = {
+        .latitude_deg = 0.0,
+        .longitude_deg = -1.0
+    };
+    bearing_deg = -1.0;
+    bearing_ok = navigation_initial_bearing_deg(origin, west, &bearing_deg);
+
+    printk("Bearing west: %s\n",
+           (bearing_ok && bearing_deg >= 269.999 && bearing_deg <= 270.001)
+               ? "PASS" : "FAIL");
+
+    bearing_deg = -1.0;
+    bearing_ok = navigation_initial_bearing_deg(origin, origin, &bearing_deg);
+
+    printk("Bearing same position: %s\n",
+           (!bearing_ok && bearing_deg == -1.0) ? "PASS" : "FAIL");
     printk("\nNavigation heading tests\n");
 
     for (size_t i = 0; i < test_count; ++i) {
