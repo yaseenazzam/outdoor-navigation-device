@@ -17,7 +17,7 @@ Implemented functionality includes:
 - Input-error reporting for distance and bearing calculations.
 - On-board tests with results printed over serial.
 
-Build, flashing, and serial output have been verified. The developer reported all 19 current checks passing on the board on November 15, 2026.
+Build, flashing, and serial output have been verified.
 
 ## Planned MVP
 
