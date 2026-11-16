@@ -1,73 +1,188 @@
 # Outdoor Navigation Device
 
-An EiE project using C, Zephyr RTOS, and the nRF52840 DK. The planned MVP receives phone position and a destination over BLE, calculates waypoint guidance, and displays direction and distance. The current firmware only prints a startup message and a heartbeat approximately once per second.
+An embedded navigation project developed through the Embedded in Embedded (EiE) program using the Nordic nRF52840 DK, C, and Zephyr RTOS.
 
-## Current development setup
+The goal is a device that receives current position and a destination from a phone over Bluetooth Low Energy, calculates waypoint guidance, and displays direction and distance.
 
-This application currently reuses the existing EiE workspace. It is not yet a self-contained, pinned workspace. Keep this layout:
+## Current Status
+
+The project currently runs navigation calculations and a serial test harness on the nRF52840 DK using fixed, simulated inputs.
+
+Implemented functionality includes:
+
+- Coordinate validation.
+- Shortest-turn heading error.
+- Great-circle distance using the haversine formula.
+- Initial bearing relative to true north.
+- Input-error reporting for distance and bearing calculations.
+- On-board tests with results printed over serial.
+
+Build, flashing, and serial output have been verified. The developer reported all 19 current checks passing on the board on November 15, 2026.
+
+## Planned MVP
+
+- Receive live phone position and a destination over BLE.
+- Measure and calibrate heading using a magnetometer, potentially combined with an IMU.
+- Calculate navigation guidance on the nRF52840.
+- Display direction, distance, and navigation status.
+- Handle stale or invalid inputs, disconnection, and arrival.
+- Demonstrate repeatable outdoor waypoint navigation.
+
+The MVP provides straight-line waypoint guidance. Onboard GNSS, ANT/ANT+, a custom PCB, and additional feedback mechanisms are optional future enhancements.
+
+## Hardware and Tools
+
+| Component | Current selection |
+|---|---|
+| Development board | Nordic nRF52840 DK |
+| Firmware language | C |
+| RTOS | Zephyr |
+| Editor | Visual Studio Code |
+| Build orchestration | West and CMake |
+| Flashing | SEGGER J-Link |
+| Planned companion phone | iPhone 16 Pro Max |
+| Heading sensor and display | To be selected |
+
+Python runs the development tools on the computer. The compiled C firmware runs on the nRF52840.
+
+## Project Structure
+
+```text
+outdoor-navigation-device/
+├── .vscode/
+│   ├── settings.json
+│   └── tasks.json
+├── src/
+│   ├── main.c
+│   ├── navigation.c
+│   └── navigation.h
+├── .gitignore
+├── CMakeLists.txt
+├── prj.conf
+└── README.md
+```
+
+- `main.c` runs the current test harness.
+- `navigation.c` implements validation and navigation calculations. It also currently contains a temporary validation test entry point.
+- `navigation.h` declares the coordinate structure and public functions.
+- `CMakeLists.txt` selects source files and integrates Zephyr.
+- `prj.conf` configures Zephyr features.
+- `.vscode/tasks.json` defines Build and Flash tasks.
+- `.vscode/settings.json` configures editor support.
+
+## Development Environment
+
+The application currently reuses an existing EiE-managed Zephyr workspace:
 
 ```text
 zephyr-projects/
 ├── .west/
 ├── zephyr/
-├── modules/hal/cmsis_6/
-├── modules/hal/nordic/
-├── eie_nrf52840/.venv/
+├── modules/
+│   └── hal/
+│       ├── cmsis_6/
+│       └── nordic/
+├── eie_nrf52840/
+│   └── .venv/
 └── outdoor-navigation-device/
 ```
 
-The successful build reported macOS, Python 3.12.1, West 1.5.0, Zephyr 4.4.0, Zephyr SDK 1.0.1, GNU C 14.3.0, and CMake 4.4.3. These are observed versions, not dependency pins. A separate reproducible workspace is a future milestone; do not update the lesson workspace just to build this application.
+The successful development build reported:
 
-## Build in VS Code
+| Tool | Version |
+|---|---|
+| Python | 3.12.1 |
+| West | 1.5.0 |
+| Zephyr | 4.4.0 |
+| Zephyr SDK | 1.0.1 |
+| GNU C compiler | 14.3.0 |
+| CMake | 4.4.3 |
 
-Open this repository folder. Press Cmd+Shift+B and choose **Navigation: Build** if prompted. The task directly invokes the existing EiE Python executable, so it does not depend on Conda activation or the selected terminal interpreter.
+These are observed working versions. Dependency revisions are not yet pinned, and cloning this repository alone does not recreate the environment. Establishing a separate reproducible workspace is an outstanding milestone.
 
-Tasks belong in `.vscode/tasks.json`. Editor settings belong in `.vscode/settings.json`. Use the Navigation task rather than the generic CMake build button.
+## Build
 
-The equivalent command, from this folder, is:
+Open the repository folder in VS Code and press **Cmd+Shift+B**. Select **Navigation: Build** if prompted.
+
+The task invokes the EiE virtual environment’s Python executable directly, avoiding dependence on terminal activation.
+
+Alternatively, run this from the repository root:
 
 ```sh
-../eie_nrf52840/.venv/bin/python -m west build -b nrf52840dk/nrf52840 . -- "-DZEPHYR_MODULES=$PWD/../modules/hal/cmsis_6;$PWD/../modules/hal/nordic" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+../eie_nrf52840/.venv/bin/python -m west build \
+  -b nrf52840dk/nrf52840 . -- \
+  "-DZEPHYR_MODULES=$PWD/../modules/hal/cmsis_6;$PWD/../modules/hal/nordic" \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 ```
 
-If changing the board or clearing stale build configuration, add `-p always` after `build`. Routine builds can reuse the build directory.
+The explicit module selection prevents the shared workspace from importing EiE lesson drivers that require lesson-specific hardware definitions.
 
-## Flash and verify on hardware
+For a pristine rebuild, add `-p always` after `build`.
 
-Connect the DK through its debug/J-Link USB port and turn it on. Install the SEGGER J-Link tools if they are not already available. Run **Tasks: Run Task → Navigation: Flash**. This builds first and replaces the firmware currently on the board.
+## Flash
 
-Equivalent flash command after a successful build:
+Connect and power the DK through its debug/J-Link USB port.
+
+In VS Code, select **Tasks: Run Task → Navigation: Flash**. This builds first and then programs the board.
+
+Alternatively, after a successful build:
 
 ```sh
 ../eie_nrf52840/.venv/bin/python -m west flash --runner jlink
 ```
 
-Open the board's SEGGER serial port at 115200 baud, 8 data bits, no parity, 1 stop bit, and no flow control. Start monitoring and reset the board. Expected output:
+Flashing replaces the firmware currently on the board.
 
-```text
-Outdoor navigation device started
-Application running
-Application running
-```
+## Run the Tests
 
-Check several heartbeat messages and repeat after reset. Hardware flashing and this runtime test have not yet been verified in this project's recorded baseline.
+1. Flash the current firmware.
+2. Open the board’s SEGGER serial port in Serial Monitor.
+3. Configure 115200 baud, 8 data bits, no parity, 1 stop bit, and no flow control.
+4. Start monitoring and press the board’s Reset button.
+5. Check each test’s PASS/FAIL output.
 
-## Editor configuration
+Tests run once per reset. Inputs are hardcoded, and the board executes the calculations and compares results with expected values.
 
-The Microsoft C/C++ extension reads `build/compile_commands.json` to obtain the actual compiler flags and Zephyr include paths. Build first, then use **C/C++: Reset IntelliSense Database** if header diagnostics remain. The generated build directory stays out of Git.
+### Verified Checks
 
-The Python interpreter default is a convenience for the local layout. Existing interpreter selections can override it, and terminal activation remains unverified. Build and Flash tasks avoid that dependency by using an explicit executable path.
+| Group | Checks | Coverage |
+|---|---:|---|
+| Coordinate validation | 3 | Valid origin, invalid latitude, invalid longitude |
+| Distance | 3 | Identical positions, one degree east at the equator, invalid destination with unchanged output |
+| Initial bearing | 3 | East at 90°, west at 270°, identical-position rejection with unchanged output |
+| Heading error | 10 | Ordinary turns, north crossing, alignment, opposite headings, fractional angles |
 
-## Known setup issues
+The distance test expects approximately **111,195 metres** for one degree of longitude at the equator, with a tolerance of 1 metre.
 
-- The EiE workspace automatically discovers its lesson module, whose LED driver requires lesson-specific hardware definitions. Explicitly selecting CMSIS and Nordic modules fixed the starter application's build. Extend this selection deliberately if later features need more modules.
-- Successful compilation does not establish successful flashing or runtime behavior.
+The final `Result: 10/10 passed` message counts only the heading tests. The other checks print individual results.
 
-## Next checkpoints
+## Navigation Conventions
 
-1. Verify flashing and repeatable serial output.
-2. Record the result and commit the working baseline.
-3. Pin dependency revisions and verify a separate clean workspace.
-4. Implement and test simulated navigation before sensor and BLE integration.
+- Coordinates use decimal degrees.
+- Latitude must be finite and within `[-90, 90]`.
+- Longitude must be finite and within `[-180, 180]`.
+- Distance uses a spherical Earth model with radius **6,371,000 metres**.
+- Initial bearing is measured clockwise from true north in `[0, 360)`.
+- Positive heading error means turn right.
+- Negative heading error means turn left.
+- Exactly opposite headings consistently select a right turn of 180°.
+- Distance and bearing functions return a Boolean success result and write through an output pointer.
+- On reported failure, the output is left unchanged.
 
-Keep credentials, sensitive location data, and restricted third-party material out of the repository. Preserve repository privacy.
+## Limitations and Outstanding Work
+
+- Tests currently use simulated inputs. Live BLE location, heading sensors, and display integration are pending.
+- The heading-error function assumes finite input angles in `[0, 360)`.
+- Bearing rejects identical coordinate pairs. Equivalent geographic positions with different representations, polar cases, and antipodal ambiguity require further handling and tests.
+- Non-finite coordinates, boundary values, and null output pointers need additional explicit runtime coverage.
+- Magnetic heading must be reconciled with true bearing before sensor-based guidance.
+- Arrival behavior, input freshness, position accuracy, and navigation states remain to be implemented.
+- The temporary test harness will need a clearer separation from application behavior as the project grows.
+
+## Development Approach
+
+Development proceeds through small, testable increments with code review, on-board verification, and documentation of observed results.
+
+AI assistance is used for architectural guidance, explanations, debugging, and review. The developer implements core navigation logic and verifies behavior on hardware.
+
+The next milestone combines distance, initial bearing, and a simulated true heading into a single guidance result. Later milestones introduce application states, live phone data, calibrated heading, a display, and outdoor testing.
