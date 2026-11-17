@@ -111,3 +111,28 @@ bool navigation_initial_bearing_deg(struct nav_position current,struct nav_posit
 
     return true;
 }
+
+bool navigation_calculate_guidance(struct nav_position current,
+                                   struct nav_position destination,
+                                   float current_heading_deg,
+                                   struct nav_guidance *guidance)
+{
+    /* Reject a NULL output pointer or an invalid heading. */
+    if (guidance == NULL || !isfinite(current_heading_deg) ||
+        current_heading_deg < 0.0f || current_heading_deg >= 360.0f) {
+        return false;
+    }
+    /* Calculate into a local result before updating the caller. */
+    struct nav_guidance result;
+    if (!navigation_distance_m(current, destination, &result.distance_m)){
+        return false;
+    }
+
+    if (!navigation_initial_bearing_deg(current, destination, &result.target_bearing_deg)){
+        return false;
+    }
+
+    result.heading_error_deg = navigation_heading_error(current_heading_deg, (float)result.target_bearing_deg);
+    *guidance = result;
+    return true;
+}

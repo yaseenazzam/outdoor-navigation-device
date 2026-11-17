@@ -85,6 +85,42 @@ int main(void)
 
     printk("Bearing same position: %s\n",
            (!bearing_ok && bearing_deg == -1.0) ? "PASS" : "FAIL");
+
+    struct nav_guidance guidance;
+
+    bool guidance_ok = navigation_calculate_guidance(
+        origin, east, 60.0f, &guidance);
+
+    bool guidance_passed =
+        guidance_ok &&
+        guidance.distance_m >= 111194.0 &&
+        guidance.distance_m <= 111196.0 &&
+        guidance.target_bearing_deg >= 89.999 &&
+        guidance.target_bearing_deg <= 90.001 &&
+        guidance.heading_error_deg >= 29.999f &&
+        guidance.heading_error_deg <= 30.001f;
+
+    printk("Combined guidance right turn: %s\n",
+           guidance_passed ? "PASS" : "FAIL");
+
+        guidance_ok = navigation_calculate_guidance(
+        origin, east, 120.0f, &guidance);
+
+    printk("Combined guidance left turn: %s\n",
+           (guidance_ok &&
+            guidance.heading_error_deg >= -30.001f &&
+            guidance.heading_error_deg <= -29.999f)
+               ? "PASS" : "FAIL");
+
+    guidance_ok = navigation_calculate_guidance(
+        origin, east, 90.0f, &guidance);
+
+    printk("Combined guidance aligned: %s\n",
+           (guidance_ok &&
+            guidance.heading_error_deg >= -0.001f &&
+            guidance.heading_error_deg <= 0.001f)
+               ? "PASS" : "FAIL");
+               
     printk("\nNavigation heading tests\n");
 
     for (size_t i = 0; i < test_count; ++i) {

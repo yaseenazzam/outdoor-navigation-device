@@ -19,6 +19,12 @@ struct nav_position {
     double longitude_deg; /* Decimal Degrees: [-180, 180] */
 };
 
+struct nav_guidance {
+    double distance_m;
+    double target_bearing_deg;
+    float heading_error_deg;
+};
+
 /*
  * Calculate distance in metres between two geographic positions.
  *
@@ -34,6 +40,19 @@ bool navigation_initial_bearing_deg(struct nav_position current,
                                struct nav_position destination,
                                double *bearing_deg);
 
+/*
+ * Calculate guidance using a heading measured from true north.
+ *
+ * current_heading_deg must be finite and in [0, 360).
+ * Returns true and writes *guidance on success.
+ * Returns false and leaves *guidance unchanged on failure.
+ */
+bool navigation_calculate_guidance(struct nav_position current,
+                                   struct nav_position destination,
+                                   float current_heading_deg,
+                                   struct nav_guidance *guidance);
+
 /* Temporary test entry point. */
 void navigation_run_validation_tests(void);
+
 #endif
