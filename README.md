@@ -1,4 +1,4 @@
-# Outdoor Navigation Device
+# Outdoor Navigation Device (Early Development)
 
 An embedded navigation project developed through the Embedded in Embedded (EiE) program using the Nordic nRF52840 DK, C, and Zephyr RTOS.
 
